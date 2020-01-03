@@ -1,0 +1,38 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'CI-with-Jenkins-in-AWS-Demo/pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    goals: 'package'
+
+- task: DockerCompose@0
+  inputs:
+    containerregistrytype: 'Azure Container Registry'
+    azureSubscription: 'Free Trial(9fbf3040-61af-4df0-b41d-4a34667d3240)'
+    azureContainerRegistry: '{"loginServer":"azuretcscontainer.azurecr.io", "id" : "/subscriptions/9fbf3040-61af-4df0-b41d-4a34667d3240/resourceGroups/azuretcsteam/providers/Microsoft.ContainerRegistry/registries/azuretcsContainer"}'
+    dockerComposeFile: 'docker-compose.yml'
+    action: 'Build services'
+
+- task: DockerCompose@0
+  inputs:
+    containerregistrytype: 'Azure Container Registry'
+    azureSubscription: 'Free Trial(9fbf3040-61af-4df0-b41d-4a34667d3240)'
+    azureContainerRegistry: '{"loginServer":"azuretcscontainer.azurecr.io", "id" : "/subscriptions/9fbf3040-61af-4df0-b41d-4a34667d3240/resourceGroups/azuretcsteam/providers/Microsoft.ContainerRegistry/registries/azuretcsContainer"}'
+    dockerComposeFile: 'docker-compose.yml'
+    action: 'Push services'
